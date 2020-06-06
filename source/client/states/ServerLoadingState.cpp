@@ -95,6 +95,7 @@ void ServerLoadingState::update() {
 				std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
 			m_game.world().changeDimension(0);
+			gkDebug() << "dim";
 
 			m_stateStack->pop();
 

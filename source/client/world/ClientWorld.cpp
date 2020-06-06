@@ -55,8 +55,8 @@ void ClientWorld::update() {
 			if (World::isReloadRequested)
 				it->second->setChanged(true);
 
-			if (it->second->areAllNeighboursInitialized())
-				it->second->update();
+			// if (it->second->areAllNeighboursInitialized())
+			it->second->update();
 
 			++it;
 		}
@@ -279,7 +279,7 @@ void ClientWorld::draw(gk::RenderTarget &target, gk::RenderStates states) const 
 		it.second->setTooFar(false);
 
 		// Is this chunk's centre on the screen?
-		float d = glm::length2(center);
+		// float d = glm::length2(center);
 		center.x /= center.w;
 		center.y /= center.w;
 
@@ -300,13 +300,13 @@ void ClientWorld::draw(gk::RenderTarget &target, gk::RenderStates states) const 
 
 		// If this chunk is not initialized, skip it
 		if(!it.second->isInitialized() && !it.second->hasBeenRequested()) {
-			// But if it is the closest to the camera, mark it for initialization
-			if(d < m_closestInitializedChunk.w) {
-				m_closestInitializedChunk.w = d;
-				m_closestInitializedChunk.x = it.second->x();
-				m_closestInitializedChunk.y = it.second->y();
-				m_closestInitializedChunk.z = it.second->z();
-			}
+			// // But if it is the closest to the camera, mark it for initialization
+			// if(d < m_closestInitializedChunk.w) {
+			// 	m_closestInitializedChunk.w = d;
+			// 	m_closestInitializedChunk.x = it.second->x();
+			// 	m_closestInitializedChunk.y = it.second->y();
+			// 	m_closestInitializedChunk.z = it.second->z();
+			// }
 
 			continue;
 		}

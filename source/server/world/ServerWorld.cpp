@@ -29,6 +29,7 @@
 #include "Dimension.hpp"
 #include "EngineConfig.hpp"
 #include "Network.hpp"
+#include "PlayerList.hpp"
 #include "Server.hpp"
 #include "ServerCommandHandler.hpp"
 #include "ServerConfig.hpp"
@@ -38,6 +39,41 @@
 void ServerWorld::update() {
 	if (m_lastTick < m_clock.getTicks() / 50) {
 		m_lastTick = m_clock.getTicks() / 50;
+
+		auto addChunkToSend = [this](s8 dx, s8 dy, s8 dz, ServerPlayer &player) {
+			gk::Vector3i currentChunk{player.getCurrentChunk()};
+			gk::Vector3i pos{currentChunk.x + dx, currentChunk.y + dy, currentChunk.z + dz};
+			m_chunksToSend.emplace(std::make_pair(pos, player.client()));
+			player.addLoadedChunk(pos);
+		};
+
+		for (auto &it : m_players) {
+			if (it.second.dimension() == m_dimension.id()) {
+				gk::Vector3i currentChunk = it.second.getCurrentChunk();
+				if (!it.second.isChunkLoaded(currentChunk)) {
+					m_chunksToSend.emplace(std::make_pair(currentChunk, it.second.client()));
+					it.second.addLoadedChunk(currentChunk);
+					// addChunkToSend(0, 0, 0, it.second);
+					for (s8 r = 1 ; r <= 10 ; ++r) { // FIXME: Hardcoded render distance
+						for (s8 z = -r ; z <= r ; z += 2 * r) {
+							for (s8 y = -r ; y <= r ; ++y) {
+								for (s8 x = -r ; x <= r ; ++x) {
+									addChunkToSend(x, y, z, it.second);
+								}
+							}
+						}
+						for (s8 z = -(r - 1) ; z <= r ; ++z) {
+							for (s8 y = -(r - 1) ; y <= r ; ++y) {
+								addChunkToSend(-r, y, z, it.second);
+								addChunkToSend(r, -y, z, it.second);
+								addChunkToSend(-y, -r, z, it.second);
+								addChunkToSend(y, r, z, it.second);
+							}
+						}
+					}
+				}
+			}
+		}
 
 		for (auto &it : m_chunks) {
 			it.second->tick(*this, *m_server);
@@ -52,6 +88,12 @@ void ServerWorld::update() {
 				// gkDebug() << "Chunk updated at" << it.second->x() << it.second->y() << it.second->z();
 			}
 		}
+	}
+
+	for (s8 i = 0 ; i <= 10 && !m_chunksToSend.empty() ; ++i) {
+		auto &[chunkPos, client] = m_chunksToSend.front();
+		sendRequestedData(client, chunkPos.x, chunkPos.y, chunkPos.z);
+		m_chunksToSend.pop();
 	}
 
 	m_scene.update();
@@ -132,7 +174,7 @@ void ServerWorld::sendChunkData(const ClientInfo &client, ServerChunk &chunk) {
 	// std::cout << "Chunk at (" << chunk->x() << ", " << chunk->y() << ", " << chunk->z() << ") sent to client" << std::endl;
 }
 
-void ServerWorld::sendRequestedData(ClientInfo &client, int cx, int cy, int cz) {
+void ServerWorld::sendRequestedData(const ClientInfo &client, int cx, int cy, int cz) {
 	ServerChunk &chunk = createChunk(cx, cy, cz);
 
 	// Create our neighbours so that we can generate and process lights correctly

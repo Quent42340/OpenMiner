@@ -117,7 +117,8 @@ void ClientPlayer::updatePosition(const ClientWorld &world) {
 	ClientChunk *chunk = (ClientChunk *)world.getChunkAtBlockPos(m_x, m_y, m_z);
 	if (chunk && chunk->isInitialized()) {
 		if (!Config::isFlyModeEnabled) {
-			m_velocity.z -= chunk->dimension().gravity() * 0.001f;
+			m_velocity.z -= 0.001f;
+			// m_velocity.z -= chunk->dimension().gravity() * 0.001f; // FIXME: Causes segfault?
 
 			m_isJumping = true;
 

@@ -49,13 +49,13 @@ class ServerWorld : public World {
 
 	public:
 		ServerWorld(PlayerList &players, const Dimension &dimension, gk::GameClock &clock)
-			: m_dimension(dimension), m_terrainGenerator(dimension), m_clock(clock), m_scene(players) {}
+			: m_players(players), m_dimension(dimension), m_terrainGenerator(dimension), m_clock(clock), m_scene(players) {}
 
 		void update();
 
 		void createChunkNeighbours(ServerChunk &chunk);
 		void sendChunkData(const ClientInfo &client, ServerChunk &chunk);
-		void sendRequestedData(ClientInfo &client, s32 cx, s32 cy, s32 cz);
+		void sendRequestedData(const ClientInfo &client, s32 cx, s32 cy, s32 cz);
 
 		ServerChunk &createChunk(s32 cx, s32 cy, s32 cz);
 
@@ -74,6 +74,8 @@ class ServerWorld : public World {
 		static void initUsertype(sol::state &lua);
 
 	private:
+		PlayerList &m_players;
+
 		const Dimension &m_dimension;
 
 		ChunkMap m_chunks;
@@ -87,6 +89,8 @@ class ServerWorld : public World {
 		gk::GameClock &m_clock;
 
 		ServerScene m_scene;
+
+		std::queue<std::pair<gk::Vector3i, const ClientInfo &>> m_chunksToSend;
 };
 
 #endif // SERVERWORLD_HPP_

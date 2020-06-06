@@ -132,7 +132,7 @@ void GameState::onEvent(const sf::Event &event) {
 }
 
 void GameState::update() {
-	m_world.checkPlayerChunk(m_player.x(), m_player.y(), m_player.z());
+	// m_world.checkPlayerChunk(m_player.x(), m_player.y(), m_player.z());
 	m_world.update();
 
 	if (m_camera.getFieldOfView() != Config::cameraFOV)

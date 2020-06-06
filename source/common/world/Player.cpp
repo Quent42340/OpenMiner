@@ -24,6 +24,7 @@
  *
  * =====================================================================================
  */
+#include "EngineConfig.hpp"
 #include "Network.hpp"
 #include "Player.hpp"
 
@@ -39,6 +40,14 @@ u8 Player::getDirection() const {
 // Note: This function returns an angle4
 u8 Player::getOppositeDirection() const {
 	return getDirection() ^ 2;
+}
+
+gk::Vector3i Player::getCurrentChunk() const {
+	return {
+		(static_cast<s32>(m_x) & -CHUNK_WIDTH)  / CHUNK_WIDTH,
+		(static_cast<s32>(m_y) & -CHUNK_DEPTH)  / CHUNK_DEPTH,
+		(static_cast<s32>(m_z) & -CHUNK_HEIGHT) / CHUNK_HEIGHT
+	};
 }
 
 void Player::serialize(sf::Packet &packet) const {

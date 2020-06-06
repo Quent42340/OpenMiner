@@ -27,6 +27,8 @@
 #ifndef SERVERPLAYER_HPP_
 #define SERVERPLAYER_HPP_
 
+#include <unordered_set>
+
 #include <gk/core/Debug.hpp>
 
 #include "ClientInfo.hpp"
@@ -41,9 +43,15 @@ class ServerPlayer : public Player {
 		const ItemStack &heldItemStack() { return m_inventory.getStack(m_heldItemSlot, 0); }
 		void setHeldItemSlot(u8 heldItemSlot) { m_heldItemSlot = heldItemSlot; }
 
+		bool isChunkLoaded(const gk::Vector3i &chunk) { return m_loadedChunks.find(chunk) != m_loadedChunks.end(); }
+		void addLoadedChunk(const gk::Vector3i &chunk) { m_loadedChunks.emplace(chunk); }
+		void removeLoadedChunk(const gk::Vector3i &chunk) { m_loadedChunks.erase(chunk); }
+
 		static void initUsertype(sol::state &lua);
 
 	private:
+		std::unordered_set<gk::Vector3i> m_loadedChunks;
+
 		ClientInfo &m_client;
 
 		u8 m_heldItemSlot = 0;
