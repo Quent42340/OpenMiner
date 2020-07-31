@@ -783,3 +783,21 @@ mod:block {
 dofile("blocks/workbench.lua")
 dofile("blocks/furnace.lua")
 dofile("blocks/door.lua")
+
+mod:block {
+	id = "oak_stairs",
+	name = "Oak Wood Stairs",
+	tiles = "oak_planks.png",
+	groups = {
+		om_material_wood = 1,
+	},
+
+	draw_type = "subboxes",
+	is_rotatable = true,
+
+	subboxes = {
+		{0, 0, 0, 1, 1, 0.5},
+		{0, 0, 0.5, 0.5, 1, 0.5},
+	}
+}
+

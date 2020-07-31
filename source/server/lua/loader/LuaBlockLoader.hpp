@@ -43,6 +43,7 @@ class LuaBlockLoader {
 	private:
 		void loadBlockState(BlockState &state, const sol::table &table, ServerBlock &block) const;
 		void loadProperties(BlockState &state, const sol::table &table) const;
+		void loadSubBoxes(BlockState &state, const sol::table &table) const;
 		void loadBoundingBox(BlockState &state, const sol::table &table) const;
 		void loadDrawType(BlockState &state, const sol::table &table, const ServerBlock &block) const;
 		void loadItemDrop(BlockState &state, const sol::table &table) const;

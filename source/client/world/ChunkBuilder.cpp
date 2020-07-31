@@ -44,8 +44,9 @@ std::array<std::size_t, ChunkBuilder::layers> ChunkBuilder::buildChunk(const Cli
 		for (s8f y = 0 ; y < CHUNK_DEPTH ; y++) {
 			for (s8f x = 0 ; x < CHUNK_WIDTH ; x++) {
 				u16 blockID = chunk.getBlock(x, y, z);
-				const Block &block = Registry::getInstance().getBlock(blockID);
 				if (!blockID) continue;
+
+				const Block &block = Registry::getInstance().getBlock(blockID);
 
 				u16 blockParam = chunk.getData(x, y, z);
 				const BlockState &blockState = block.getState(block.param().hasParam(BlockParam::State)
@@ -58,10 +59,13 @@ std::array<std::size_t, ChunkBuilder::layers> ChunkBuilder::buildChunk(const Cli
 				 || blockState.drawType() == BlockDrawType::Cactus
 				 || blockState.drawType() == BlockDrawType::BoundingBox)
 				{
-					addCube(x, y, z, chunk, blockState, blockParam);
+					addBlock(x, y, z, chunk, blockState, blockParam);
 				}
 				else if (blockState.drawType() == BlockDrawType::XShape) {
 					addCross(x, y, z, chunk, blockState);
+				}
+				else if (blockState.drawType() == BlockDrawType::SubBoxes) {
+					addSubBoxes(x, y, z, chunk, blockState, blockParam);
 				}
 			}
 		}
@@ -83,7 +87,7 @@ std::array<std::size_t, ChunkBuilder::layers> ChunkBuilder::buildChunk(const Cli
 	return verticesCount;
 }
 
-inline void ChunkBuilder::addCube(s8f x, s8f y, s8f z, const ClientChunk &chunk, const BlockState &blockState, u16 blockParam) {
+inline void ChunkBuilder::addBlock(s8f x, s8f y, s8f z, const ClientChunk &chunk, const BlockState &blockState, u16 blockParam) {
 	const gk::FloatBox &boundingBox = blockState.boundingBox();
 
 	u8f orientation = blockState.block().isRotatable()
@@ -147,13 +151,13 @@ inline void ChunkBuilder::addCube(s8f x, s8f y, s8f z, const ClientChunk &chunk,
 
 		const gk::Vector3i *vFaceNeighbours[nVertsPerFace]{&corner0, &corner1, &corner2, &corner3};
 
-		addCubeFace(x, y, z, f, chunk, blockState, normal, faceVerts, vFaceNeighbours);
+		addBlockFace(x, y, z, f, chunk, blockState, normal, faceVerts, vFaceNeighbours);
 	}
 }
 
-inline void ChunkBuilder::addCubeFace(s8f x, s8f y, s8f z, s8f f, const ClientChunk &chunk, const BlockState &blockState,
-                                      const gk::Vector3i &normal, const glm::vec3 *const vertexPos[nVertsPerFace],
-                                      const gk::Vector3i *const neighbourOfs[nVertsPerFace])
+inline void ChunkBuilder::addBlockFace(s8f x, s8f y, s8f z, s8f f, const ClientChunk &chunk, const BlockState &blockState,
+                                       const gk::Vector3i &normal, const glm::vec3 *const vertexPos[nVertsPerFace],
+                                       const gk::Vector3i *const neighbourOfs[nVertsPerFace])
 {
 	// Get surrounding block for the face
 	const BlockState *surroundingBlockState = chunk.getBlockState(x + normal.x, y + normal.y, z + normal.z);
@@ -196,9 +200,9 @@ inline void ChunkBuilder::addCubeFace(s8f x, s8f y, s8f z, s8f f, const ClientCh
 	Vertex vertices[nVertsPerFace];
 	for (s8f v = 0; v < nVertsPerFace; ++v) {
 		if (blockState.drawType() == BlockDrawType::Cactus) {
-			vertices[v].coord3d[0] = x + vertexPos[v]->x - boundingBox.x * normal.x;
-			vertices[v].coord3d[1] = y + vertexPos[v]->y - boundingBox.y * normal.y;
-			vertices[v].coord3d[2] = z + vertexPos[v]->z - boundingBox.z * normal.z;
+			vertices[v].coord3d[0] = x + vertexPos[v]->x - boundingBox.x * normal.x + blockState.drawOffset().x;
+			vertices[v].coord3d[1] = y + vertexPos[v]->y - boundingBox.y * normal.y + blockState.drawOffset().y;
+			vertices[v].coord3d[2] = z + vertexPos[v]->z - boundingBox.z * normal.z + blockState.drawOffset().z;
 		}
 		else {
 			float blockHeight = vertexPos[v]->z;
@@ -345,6 +349,132 @@ inline void ChunkBuilder::addCross(s8f x, s8f y, s8f z, const ClientChunk &chunk
 		m_vertices[Layer::Flora].emplace_back(vertices[3]);
 		m_vertices[Layer::Flora].emplace_back(vertices[1]);
 		m_vertices[Layer::Flora].emplace_back(vertices[2]);
+	}
+}
+
+void ChunkBuilder::addSubBoxes(s8f x, s8f y, s8f z, const ClientChunk &chunk, const BlockState &blockState, u16 blockParam) {
+	u8f orientation = blockState.block().isRotatable()
+		? blockState.block().param().getParam(BlockParam::Rotation, blockParam) : 0;
+	const glm::mat3 &orientMatrix = orientMatrices[orientation];
+
+	for (auto &it : blockState.subBoxes()) {
+		glm::vec3 vertexPos[nVertsPerCube]{
+			// Order is important. It matches the bit order defined in BlockGeometry::cubeVerts.
+			{it.x,            it.y,            it.z},
+			{it.x + it.sizeX, it.y,            it.z},
+			{it.x,            it.y + it.sizeY, it.z},
+			{it.x + it.sizeX, it.y + it.sizeY, it.z},
+			{it.x,            it.y,            it.z + it.sizeZ},
+			{it.x + it.sizeX, it.y,            it.z + it.sizeZ},
+			{it.x,            it.y + it.sizeY, it.z + it.sizeZ},
+			{it.x + it.sizeX, it.y + it.sizeY, it.z + it.sizeZ},
+		};
+
+		// vNeighbour is used to find neighbouring cubes per vertex.
+		// Same binary layout.
+		glm::vec3 vNeighbour[nVertsPerCube] = {
+			{-1,-1,-1}, { 1,-1,-1}, {-1, 1,-1}, { 1, 1,-1}, {-1,-1, 1}, { 1,-1, 1}, {-1, 1, 1}, {1, 1, 1},
+		};
+
+		if (orientation) { // don't work extra if it's not oriented differently
+			static const glm::vec3 half{0.5, 0.5, 0.5};
+			// Rotate each vertex coordinate around the centre of the
+			// cube, and each vertex neighbour around the origin
+			for (int i = 0; i < nVertsPerCube; ++i) {
+				vertexPos[i] = orientMatrix * (vertexPos[i] - half) + half;
+				vNeighbour[i] = orientMatrix * vNeighbour[i];
+			}
+		}
+
+		for (int f = 0; f < nFaces ; ++f) {
+			const std::string &texture = blockState.tiles().getTextureForFace(f);
+			const gk::FloatRect &blockTexCoords = m_textureAtlas.getTexCoords(texture);
+
+			// Construct the normal vector to a face
+			const glm::vec3 glmNormal = orientMatrix * faceNormals[f];
+			const gk::Vector3i normal{int(glmNormal.x), int(glmNormal.y), int(glmNormal.z)};
+
+			// Construct an array with the 4 vertex positions of this face
+			glm::vec3 *faceVerts[nVertsPerFace]{
+				&vertexPos[cubeVerts[f][0]], &vertexPos[cubeVerts[f][1]],
+				&vertexPos[cubeVerts[f][2]], &vertexPos[cubeVerts[f][3]]
+			};
+
+			// Construct an array with the 4 vertex neighbours of this face
+			// (as GameKit integer vectors)
+			const gk::Vector3i corner0{int(vNeighbour[cubeVerts[f][0]].x), int(vNeighbour[cubeVerts[f][0]].y), int(vNeighbour[cubeVerts[f][0]].z)};
+			const gk::Vector3i corner1{int(vNeighbour[cubeVerts[f][1]].x), int(vNeighbour[cubeVerts[f][1]].y), int(vNeighbour[cubeVerts[f][1]].z)};
+			const gk::Vector3i corner2{int(vNeighbour[cubeVerts[f][2]].x), int(vNeighbour[cubeVerts[f][2]].y), int(vNeighbour[cubeVerts[f][2]].z)};
+			const gk::Vector3i corner3{int(vNeighbour[cubeVerts[f][3]].x), int(vNeighbour[cubeVerts[f][3]].y), int(vNeighbour[cubeVerts[f][3]].z)};
+
+			const gk::Vector3i *neighbourOfs[nVertsPerFace]{&corner0, &corner1, &corner2, &corner3};
+
+			// Calculate UV's
+			// These are tough to obtain. Note that texture Y grows in the up-down direction, and so does V.
+			// Vertex index in the bitmap array and U/V correspondence is:
+			//    U0V0 -> 3 2 <- U1V0
+			//    U0V1 -> 0 1 <- U1V1
+			// FIXME: Duplicated from addBlock()
+			float U0, V0, U1, V1;
+			if (blockState.drawType() == BlockDrawType::Cactus) {
+				U0 = 0.f;
+				V0 = 0.f;
+				U1 = 1.f;
+				V1 = 1.f;
+			}
+			else {
+				U0 = (f == 0) ? 1.f - (it.y + it.sizeY) : (f == 1) ? it.y :
+					 (f == 3) ? 1.f - (it.x + it.sizeX) : it.x;
+				V0 = (f <= 3) ? 1.f - (it.z + it.sizeZ) : (f == 4) ? it.y : 1.f - (it.y + it.sizeY);
+				U1 = (f == 0) ? 1.f - it.y : (f == 1) ? it.y + it.sizeY :
+					 (f == 3) ? 1.f - it.x : it.x + it.sizeX;
+				V1 = (f <= 3) ? 1.f - it.z : (f == 4) ? it.y + it.sizeY : 1.f - it.y;
+			}
+
+			Vertex vertices[nVertsPerFace];
+			for (int v = 0 ; v < nVertsPerFace ; ++v) {
+				vertices[v].coord3d[0] = x + faceVerts[v]->x + blockState.drawOffset().x;
+				vertices[v].coord3d[1] = y + faceVerts[v]->y + blockState.drawOffset().y;
+				vertices[v].coord3d[2] = z + faceVerts[v]->z + blockState.drawOffset().z;
+				vertices[v].coord3d[3] = f;
+
+				vertices[v].normal[0] = normal.x;
+				vertices[v].normal[1] = normal.y;
+				vertices[v].normal[2] = normal.z;
+
+				const gk::Color colorMultiplier = blockState.colorMultiplier();
+				vertices[v].color[0] = colorMultiplier.r;
+				vertices[v].color[1] = colorMultiplier.g;
+				vertices[v].color[2] = colorMultiplier.b;
+				vertices[v].color[3] = colorMultiplier.a;
+
+				float U = (v == 0 || v == 3) ? U0 : U1;
+				float V = (v >= 2) ? V0 : V1;
+				vertices[v].texCoord[0] = gk::qlerp(blockTexCoords.x, blockTexCoords.x + blockTexCoords.sizeX, U);
+				vertices[v].texCoord[1] = gk::qlerp(blockTexCoords.y, blockTexCoords.y + blockTexCoords.sizeY, V);
+
+				if (Config::isSmoothLightingEnabled)
+					vertices[v].lightValue[0] = getLightForVertex(Light::Sun, x, y, z, *neighbourOfs[v], normal, chunk);
+				else
+					vertices[v].lightValue[0] = chunk.lightmap().getSunlight(x + normal.x, y + normal.y, z + normal.z);
+
+				if (Config::isSmoothLightingEnabled && !blockState.isLightSource())
+					vertices[v].lightValue[1] = getLightForVertex(Light::Torch, x, y, z, *neighbourOfs[v], normal, chunk);
+				else if (blockState.isOpaque())
+					vertices[v].lightValue[1] = chunk.lightmap().getTorchlight(x + normal.x, y + normal.y, z + normal.z);
+				else
+					vertices[v].lightValue[1] = chunk.lightmap().getTorchlight(x, y, z);
+
+				vertices[v].ambientOcclusion = getAmbientOcclusion(x, y, z, *neighbourOfs[v], normal, chunk);
+			}
+
+			m_vertices[Layer::Flora].emplace_back(vertices[0]);
+			m_vertices[Layer::Flora].emplace_back(vertices[1]);
+			m_vertices[Layer::Flora].emplace_back(vertices[3]);
+			m_vertices[Layer::Flora].emplace_back(vertices[3]);
+			m_vertices[Layer::Flora].emplace_back(vertices[1]);
+			m_vertices[Layer::Flora].emplace_back(vertices[2]);
+		}
 	}
 }
 

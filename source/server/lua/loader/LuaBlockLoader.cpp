@@ -74,6 +74,9 @@ void LuaBlockLoader::loadBlockState(BlockState &state, const sol::table &table, 
 		state.tiles(tiles);
 
 	loadDrawType(state, table, block);
+	if (state.drawType() == BlockDrawType::SubBoxes)
+		loadSubBoxes(state, table);
+
 	loadProperties(state, table);
 	loadBoundingBox(state, table);
 	loadItemDrop(state, table);
@@ -129,6 +132,24 @@ inline void LuaBlockLoader::loadProperties(BlockState &state, const sol::table &
 		state.isCollidable(table["is_collidable"].get<bool>());
 }
 
+inline void LuaBlockLoader::loadSubBoxes(BlockState &state, const sol::table &table) const {
+	sol::optional<sol::table> subBoxes = table["subboxes"];
+	if (subBoxes != sol::nullopt) {
+		for (auto &it : subBoxes.value()) {
+			if (it.second.get_type() == sol::type::table) {
+				state.addSubBox(gk::FloatBox{
+					it.second.as<sol::table>().get<float>(1),
+					it.second.as<sol::table>().get<float>(2),
+					it.second.as<sol::table>().get<float>(3),
+					it.second.as<sol::table>().get<float>(4),
+					it.second.as<sol::table>().get<float>(5),
+					it.second.as<sol::table>().get<float>(6),
+				});
+			}
+		}
+	}
+}
+
 inline void LuaBlockLoader::loadBoundingBox(BlockState &state, const sol::table &table) const {
 	sol::optional<sol::table> boundingBox = table["bounding_box"];
 	if (boundingBox != sol::nullopt) {
@@ -148,12 +169,13 @@ inline void LuaBlockLoader::loadDrawType(BlockState &state, const sol::table &ta
 	if (drawTypeObject.valid()) {
 		if (drawTypeObject.get_type() == sol::type::string) {
 			static const std::unordered_map<std::string, BlockDrawType> drawTypes = {
-				{"solid",  BlockDrawType::Solid},
-				{"xshape", BlockDrawType::XShape},
-				{"leaves", BlockDrawType::Leaves},
-				{"liquid", BlockDrawType::Liquid},
-				{"glass",  BlockDrawType::Glass},
-				{"cactus", BlockDrawType::Cactus},
+				{"solid",       BlockDrawType::Solid},
+				{"xshape",      BlockDrawType::XShape},
+				{"leaves",      BlockDrawType::Leaves},
+				{"liquid",      BlockDrawType::Liquid},
+				{"glass",       BlockDrawType::Glass},
+				{"cactus",      BlockDrawType::Cactus},
+				{"subboxes",    BlockDrawType::SubBoxes},
 				{"boundingbox", BlockDrawType::BoundingBox}, // FIXME: Temporary
 			};
 

@@ -31,7 +31,6 @@
 #include <unordered_map>
 
 #include <gk/core/Box.hpp>
-#include <gk/core/Debug.hpp> // FIXME
 #include <gk/core/IntTypes.hpp>
 
 #include "BlockParam.hpp"
@@ -39,13 +38,14 @@
 #include "TilesDef.hpp"
 
 enum class BlockDrawType : u8 {
-	Solid   = 0,
-	XShape  = 1,
-	Leaves  = 2,
-	Liquid  = 3,
-	Glass   = 4,
-	Cactus  = 5,
-	BoundingBox = 6, // FIXME: Temporary
+	Solid       = 0,
+	XShape      = 1,
+	Leaves      = 2,
+	Liquid      = 3,
+	Glass       = 4,
+	Cactus      = 5,
+	SubBoxes    = 6,
+	BoundingBox = 7, // FIXME: Temporary
 };
 
 #define BLOCK_ATTR_GETTER(attrName) \
@@ -104,6 +104,8 @@ class BlockState : public gk::ISerializable {
 		void setBlock(const Block *block) { m_block = block; }
 		void setDefaultState(const BlockState *defaultState) { m_defaultState = defaultState; }
 
+		void addSubBox(const gk::FloatBox &subBox) { m_subBoxes.emplace_back(subBox); }
+
 		static void initUsertype(sol::state &lua);
 
 	private:
@@ -129,6 +131,7 @@ class BlockState : public gk::ISerializable {
 			attr_fogColor             = 1 << 13,
 			attr_drawOffset           = 1 << 14,
 			attr_isCollidable         = 1 << 15,
+			attr_subBoxes             = 1 << 16,
 		};
 
 		BLOCK_ATTR(std::string, label);
@@ -156,6 +159,8 @@ class BlockState : public gk::ISerializable {
 		BLOCK_ATTR_V(gk::Vector3f, drawOffset, (gk::Vector3f{0, 0, 0}));
 
 		BLOCK_ATTR_V(bool, isCollidable, true);
+
+		BLOCK_ATTR(std::vector<gk::FloatBox>, subBoxes);
 
 		u32 m_attrs = 0;
 

@@ -28,7 +28,7 @@
 #define NETWORKUTILS_HPP_
 
 #include <SFML/Network/Packet.hpp>
-//
+
 //======================================================================================
 // std::vector
 //======================================================================================
@@ -37,7 +37,7 @@
 template<typename T>
 sf::Packet &operator<<(sf::Packet &packet, const std::vector<T> &vec) {
 	packet << (unsigned int)vec.size();
-	for (auto &it : vec)
+	for (const T &it : vec)
 		packet << it;
 	return packet;
 }
