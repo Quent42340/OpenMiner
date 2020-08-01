@@ -256,7 +256,7 @@ inline void ChunkBuilder::addBlockFace(s8f x, s8f y, s8f z, s8f f, const ClientC
 
 	auto addVertex = [&](u8 v) {
 		if (Config::ambientOcclusion != 1 || blockState.isLightSource())
-			vertices[v].ambientOcclusion = 5;
+			vertices[v].ambientOcclusion = 4;
 
 		if (blockState.drawType() == BlockDrawType::Liquid)
 			m_vertices[Layer::Liquid].emplace_back(vertices[v]);
@@ -340,7 +340,7 @@ inline void ChunkBuilder::addCross(s8f x, s8f y, s8f z, const ClientChunk &chunk
 			vertices[v].lightValue[0] = chunk.lightmap().getSunlight(x, y, z);
 			vertices[v].lightValue[1] = chunk.lightmap().getTorchlight(x, y, z);
 
-			vertices[v].ambientOcclusion = 5;
+			vertices[v].ambientOcclusion = 4;
 		}
 
 		m_vertices[Layer::Flora].emplace_back(vertices[0]);
