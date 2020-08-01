@@ -32,6 +32,7 @@
 
 #include <glm/matrix.hpp>
 
+#include <gk/core/Box.hpp>
 #include <gk/core/Vector3.hpp>
 #include <gk/gl/VertexBuffer.hpp>
 
@@ -58,14 +59,13 @@ class ChunkBuilder {
 		};
 
 	private:
-		void addBlock(s8f x, s8f y, s8f z, const ClientChunk &chunk, const BlockState &blockState, u16 blockParam);
+		void addBlock(s8f x, s8f y, s8f z, const ClientChunk &chunk, const BlockState &blockState,
+		              u8f orientation, const glm::mat3 &orientMatrix, const gk::FloatBox &boundingBox);
 		void addBlockFace(s8f x, s8f y, s8f z, s8f f, const ClientChunk &chunk, const BlockState &blockState,
-		             const gk::Vector3i &normal, const glm::vec3 *const vertexPos[4],
-		             const gk::Vector3i *const neighbourOfs[4]);
+		                  const gk::Vector3i &normal, const glm::vec3 *const vertexPos[4],
+		                  const gk::Vector3i *const neighbourOfs[4], const gk::FloatBox &boundingBox);
 
 		void addCross(s8f x, s8f y, s8f z, const ClientChunk &chunk, const BlockState &blockState);
-
-		void addSubBoxes(s8f x, s8f y, s8f z, const ClientChunk &chunk, const BlockState &blockState, u16 blockParam);
 
 		enum class Light {
 			Sun,
@@ -76,7 +76,7 @@ class ChunkBuilder {
 		                       const gk::Vector3i &normal, const ClientChunk &chunk);
 
 		u8 getLightForVertex(Light light, s8f x, s8f y, s8f z, const gk::Vector3i &offset,
-		                     const gk::Vector3i &normal, const ClientChunk &chunk);
+		                     const gk::Vector3i &normal, const ClientChunk &chunk, bool useAO);
 
 		std::array<std::vector<Vertex>, layers> m_vertices;
 
