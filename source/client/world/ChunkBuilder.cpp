@@ -241,8 +241,10 @@ inline void ChunkBuilder::addBlockFace(s8f x, s8f y, s8f z, s8f f, const ClientC
 
 		if (Config::isSmoothLightingEnabled)
 			vertices[v].lightValue[0] = getLightForVertex(Light::Sun, x, y, z, *neighbourOfs[v], normal, chunk);
-		else
+		else if (blockState.isOpaque())
 			vertices[v].lightValue[0] = chunk.lightmap().getSunlight(x + normal.x, y + normal.y, z + normal.z);
+		else
+			vertices[v].lightValue[0] = chunk.lightmap().getSunlight(x, y, z);
 
 		if (Config::isSmoothLightingEnabled && !blockState.isLightSource())
 			vertices[v].lightValue[1] = getLightForVertex(Light::Torch, x, y, z, *neighbourOfs[v], normal, chunk);
@@ -455,8 +457,10 @@ void ChunkBuilder::addSubBoxes(s8f x, s8f y, s8f z, const ClientChunk &chunk, co
 
 				if (Config::isSmoothLightingEnabled)
 					vertices[v].lightValue[0] = getLightForVertex(Light::Sun, x, y, z, *neighbourOfs[v], normal, chunk);
-				else
+				else if (blockState.isOpaque())
 					vertices[v].lightValue[0] = chunk.lightmap().getSunlight(x + normal.x, y + normal.y, z + normal.z);
+				else
+					vertices[v].lightValue[0] = chunk.lightmap().getSunlight(x, y, z);
 
 				if (Config::isSmoothLightingEnabled && !blockState.isLightSource())
 					vertices[v].lightValue[1] = getLightForVertex(Light::Torch, x, y, z, *neighbourOfs[v], normal, chunk);
@@ -465,8 +469,9 @@ void ChunkBuilder::addSubBoxes(s8f x, s8f y, s8f z, const ClientChunk &chunk, co
 				else
 					vertices[v].lightValue[1] = chunk.lightmap().getTorchlight(x, y, z);
 
-				if (faceVerts[v]->z == 0 && normal.z == 0)
-					vertices[v].ambientOcclusion = getAmbientOcclusion(x, y, z, *neighbourOfs[v], normal, chunk);
+				// FIXME
+				// if (Config::ambientOcclusion == 1 && faceVerts[v]->z == 0 && normal.z == 0)
+				// 	vertices[v].ambientOcclusion = getAmbientOcclusion(x, y, z, *neighbourOfs[v], normal, chunk);
 			}
 
 			m_vertices[Layer::Flora].emplace_back(vertices[0]);

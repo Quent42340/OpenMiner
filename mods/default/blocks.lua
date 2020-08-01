@@ -793,6 +793,7 @@ mod:block {
 	},
 
 	draw_type = "subboxes",
+	is_opaque = false,
 	is_rotatable = true,
 
 	subboxes = {
