@@ -465,7 +465,8 @@ void ChunkBuilder::addSubBoxes(s8f x, s8f y, s8f z, const ClientChunk &chunk, co
 				else
 					vertices[v].lightValue[1] = chunk.lightmap().getTorchlight(x, y, z);
 
-				vertices[v].ambientOcclusion = getAmbientOcclusion(x, y, z, *neighbourOfs[v], normal, chunk);
+				if (faceVerts[v]->z == 0 && normal.z == 0)
+					vertices[v].ambientOcclusion = getAmbientOcclusion(x, y, z, *neighbourOfs[v], normal, chunk);
 			}
 
 			m_vertices[Layer::Flora].emplace_back(vertices[0]);

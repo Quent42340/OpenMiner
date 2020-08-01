@@ -2,6 +2,7 @@
 
 varying vec4 v_coord3d;
 varying vec4 v_color;
+varying vec4 v_normal;
 varying vec2 v_texCoord;
 varying vec2 v_lightValue;
 varying float v_ambientOcclusion;
@@ -27,6 +28,7 @@ void main() {
 	// Refer to #23 for more informations
 	float blockFace = floor(v_blockFace + 0.5);
 	float lightCheck = floor(v_lightValue.x + 0.5);
+	vec4 normal = floor(v_normal + 0.5);
 
 	// Discard if the pixel is too far away
 	if(blockFace > -1. && v_dist > u_renderDistance) discard;
@@ -64,13 +66,13 @@ void main() {
 
 		// These numbers should be in sync with enum BlockFace in TilesDef.hpp
 		// Bottom
-		if (blockFace == 4.)
+		if (normal.z == -1)
 			ambientIntensity = max(ambientIntensity * 0.6, minBrightness);
 		// West or East
-		if (blockFace == 0. || blockFace == 1.)
+		if (normal.x == 1 || normal.x == -1)
 			ambientIntensity = max(ambientIntensity * 0.75, minBrightness);
 		// South or North
-		if (blockFace == 2. || blockFace == 3.)
+		if (normal.y == 1 || normal.y == -1)
 			ambientIntensity = max(ambientIntensity * 0.9, minBrightness);
 
 		float lightval = clamp(sunlight / 15.0, v_lightValue.y / 15.0, 1.0);
