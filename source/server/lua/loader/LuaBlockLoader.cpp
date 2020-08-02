@@ -135,16 +135,52 @@ inline void LuaBlockLoader::loadProperties(BlockState &state, const sol::table &
 inline void LuaBlockLoader::loadSubBoxes(BlockState &state, const sol::table &table) const {
 	sol::optional<sol::table> subBoxes = table["subboxes"];
 	if (subBoxes != sol::nullopt) {
-		for (auto &it : subBoxes.value()) {
-			if (it.second.get_type() == sol::type::table) {
-				state.addSubBox(gk::FloatBox{
-					it.second.as<sol::table>().get<float>(1),
-					it.second.as<sol::table>().get<float>(2),
-					it.second.as<sol::table>().get<float>(3),
-					it.second.as<sol::table>().get<float>(4),
-					it.second.as<sol::table>().get<float>(5),
-					it.second.as<sol::table>().get<float>(6),
-				});
+		sol::table subBoxesTable = subBoxes.value();
+		std::string type = subBoxesTable["type"].get<std::string>();
+		state.subBoxesType(type);
+
+		if (type == "fixed" || type == "connected") {
+			sol::table fixedTable = subBoxesTable["fixed"];
+			for (auto &it : fixedTable) {
+				if (it.second.get_type() == sol::type::table) {
+					state.addSubBox(gk::FloatBox{
+						it.second.as<sol::table>().get<float>(1),
+						it.second.as<sol::table>().get<float>(2),
+						it.second.as<sol::table>().get<float>(3),
+						it.second.as<sol::table>().get<float>(4),
+						it.second.as<sol::table>().get<float>(5),
+						it.second.as<sol::table>().get<float>(6),
+					});
+				}
+			}
+		}
+
+		if (type == "connected") {
+			const char *names[6] = {
+				"connect_west",
+				"connect_east",
+				"connect_south",
+				"connect_north",
+				"connect_bottom",
+				"connect_top",
+			};
+
+			for (int i = 0 ; i < 6 ; ++i) {
+				sol::optional<sol::table> connectObject = subBoxesTable[names[i]];
+				if (connectObject != sol::nullopt) {
+					for (auto &it : connectObject.value()) {
+						if (it.second.get_type() == sol::type::table) {
+							state.addConnectedSubBox((BlockFace)i, gk::FloatBox{
+								it.second.as<sol::table>().get<float>(1),
+								it.second.as<sol::table>().get<float>(2),
+								it.second.as<sol::table>().get<float>(3),
+								it.second.as<sol::table>().get<float>(4),
+								it.second.as<sol::table>().get<float>(5),
+								it.second.as<sol::table>().get<float>(6),
+							});
+						}
+					}
+				}
 			}
 		}
 	}

@@ -27,6 +27,7 @@
 #ifndef BLOCKSTATE_HPP_
 #define BLOCKSTATE_HPP_
 
+#include <array>
 #include <string>
 #include <unordered_map>
 
@@ -105,6 +106,7 @@ class BlockState : public gk::ISerializable {
 		void setDefaultState(const BlockState *defaultState) { m_defaultState = defaultState; }
 
 		void addSubBox(const gk::FloatBox &subBox) { m_subBoxes.emplace_back(subBox); }
+		void addConnectedSubBox(BlockFace face, const gk::FloatBox &subBox) { m_connectedSubBoxes[face].emplace_back(subBox); }
 
 		static void initUsertype(sol::state &lua);
 
@@ -131,7 +133,9 @@ class BlockState : public gk::ISerializable {
 			attr_fogColor             = 1 << 13,
 			attr_drawOffset           = 1 << 14,
 			attr_isCollidable         = 1 << 15,
-			attr_subBoxes             = 1 << 16,
+			attr_subBoxesType         = 1 << 16,
+			attr_subBoxes             = 1 << 17,
+			attr_connectedSubBoxes    = 1 << 18,
 		};
 
 		BLOCK_ATTR(std::string, label);
@@ -160,7 +164,10 @@ class BlockState : public gk::ISerializable {
 
 		BLOCK_ATTR_V(bool, isCollidable, true);
 
+		using ConnectedSubBoxes = std::array<std::vector<gk::FloatBox>, 6>;
+		BLOCK_ATTR(std::string, subBoxesType);
 		BLOCK_ATTR(std::vector<gk::FloatBox>, subBoxes);
+		BLOCK_ATTR(ConnectedSubBoxes, connectedSubBoxes);
 
 		u32 m_attrs = 0;
 

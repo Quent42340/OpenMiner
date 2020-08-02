@@ -73,6 +73,28 @@ std::array<std::size_t, ChunkBuilder::layers> ChunkBuilder::buildChunk(const Cli
 					for (auto &it : blockState.subBoxes()) {
 						addBlock(x, y, z, chunk, blockState, orientation, orientMatrix, it);
 					}
+
+					if (blockState.subBoxesType() == "connected") {
+						u16 neighbours[6 + 1] = {
+							chunk.getBlock(x - 1, y,     z),
+							chunk.getBlock(x + 1, y,     z),
+							chunk.getBlock(x,     y - 1, z),
+							chunk.getBlock(x,     y + 1, z),
+							chunk.getBlock(x,     y,     z - 1),
+							chunk.getBlock(x,     y,     z + 1),
+
+							chunk.getBlock(x, y, z),
+						};
+
+						for (int i = 0 ; i < 6 ; ++i) {
+							auto &boxes = blockState.connectedSubBoxes()[i];
+							if (neighbours[i] == neighbours[6] && boxes.size()) {
+								for (auto &it : boxes) {
+									addBlock(x, y, z, chunk, blockState, orientation, orientMatrix, it);
+								}
+							}
+						}
+					}
 				}
 			}
 		}
