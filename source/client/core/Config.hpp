@@ -33,8 +33,8 @@
 
 namespace Config {
 	// Gameplay
-	extern bool isFlyModeEnabled;
 	extern bool isNoClipEnabled;
+	extern bool isFlyModeEnabled;
 	extern u16 maxBlockReach;
 
 	// Interface

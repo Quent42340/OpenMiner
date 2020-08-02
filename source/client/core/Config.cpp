@@ -38,8 +38,8 @@
 namespace fs = ghc::filesystem;
 
 // Gameplay
-bool Config::isFlyModeEnabled = false;
 bool Config::isNoClipEnabled = false;
+bool Config::isFlyModeEnabled = false;
 u16 Config::maxBlockReach = 7;
 
 // Interface
