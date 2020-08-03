@@ -135,11 +135,18 @@ inline void LuaBlockLoader::loadProperties(BlockState &state, const sol::table &
 inline void LuaBlockLoader::loadSubBoxes(BlockState &state, const sol::table &table) const {
 	sol::optional<sol::table> subBoxes = table["subboxes"];
 	if (subBoxes != sol::nullopt) {
+		static std::unordered_map<std::string, BlockState::SubBoxType> typeMap{
+			{"fixed",       BlockState::Fixed},
+			{"connected",   BlockState::Connected},
+			{"wallmounted", BlockState::WallMounted},
+		};
+
 		sol::table subBoxesTable = subBoxes.value();
 		std::string type = subBoxesTable["type"].get<std::string>();
-		state.subBoxesType(type);
 
-		if (type == "fixed" || type == "connected") {
+		state.subBoxesType(typeMap.at(type));
+
+		if (state.subBoxesType() == BlockState::Fixed || state.subBoxesType() == BlockState::Connected) {
 			sol::table fixedTable = subBoxesTable["fixed"];
 			for (auto &it : fixedTable) {
 				if (it.second.get_type() == sol::type::table) {
@@ -155,7 +162,7 @@ inline void LuaBlockLoader::loadSubBoxes(BlockState &state, const sol::table &ta
 			}
 		}
 
-		if (type == "connected") {
+		if (state.subBoxesType() == BlockState::Connected) {
 			const char *names[6] = {
 				"connect_west",
 				"connect_east",
@@ -171,6 +178,32 @@ inline void LuaBlockLoader::loadSubBoxes(BlockState &state, const sol::table &ta
 					for (auto &it : connectObject.value()) {
 						if (it.second.get_type() == sol::type::table) {
 							state.addConnectedSubBox((BlockFace)i, gk::FloatBox{
+								it.second.as<sol::table>().get<float>(1),
+								it.second.as<sol::table>().get<float>(2),
+								it.second.as<sol::table>().get<float>(3),
+								it.second.as<sol::table>().get<float>(4),
+								it.second.as<sol::table>().get<float>(5),
+								it.second.as<sol::table>().get<float>(6),
+							});
+						}
+					}
+				}
+			}
+		}
+
+		if (state.subBoxesType() == BlockState::WallMounted) {
+			const char *names[3] = {
+				"wall_top",
+				"wall_bottom",
+				"wall_side",
+			};
+
+			for (int i = 0 ; i < 3 ; ++i) {
+				sol::optional<sol::table> connectObject = subBoxesTable[names[i]];
+				if (connectObject != sol::nullopt) {
+					for (auto &it : connectObject.value()) {
+						if (it.second.get_type() == sol::type::table) {
+							state.addWallMountedBox((BlockState::WallMountedBoxType)i, gk::FloatBox{
 								it.second.as<sol::table>().get<float>(1),
 								it.second.as<sol::table>().get<float>(2),
 								it.second.as<sol::table>().get<float>(3),

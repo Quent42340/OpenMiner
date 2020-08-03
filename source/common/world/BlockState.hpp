@@ -105,8 +105,21 @@ class BlockState : public gk::ISerializable {
 		void setBlock(const Block *block) { m_block = block; }
 		void setDefaultState(const BlockState *defaultState) { m_defaultState = defaultState; }
 
+		enum SubBoxType {
+			Fixed,
+			Connected,
+			WallMounted
+		};
+
+		enum WallMountedBoxType {
+			WallTop,
+			WallBottom,
+			WallSides,
+		};
+
 		void addSubBox(const gk::FloatBox &subBox) { m_subBoxes.emplace_back(subBox); }
 		void addConnectedSubBox(BlockFace face, const gk::FloatBox &subBox) { m_connectedSubBoxes[face].emplace_back(subBox); }
+		void addWallMountedBox(WallMountedBoxType type, const gk::FloatBox &subBox) { m_connectedSubBoxes[type + 6].emplace_back(subBox); }
 
 		static void initUsertype(sol::state &lua);
 
@@ -164,8 +177,8 @@ class BlockState : public gk::ISerializable {
 
 		BLOCK_ATTR_V(bool, isCollidable, true);
 
-		using ConnectedSubBoxes = std::array<std::vector<gk::FloatBox>, 6>;
-		BLOCK_ATTR(std::string, subBoxesType);
+		using ConnectedSubBoxes = std::array<std::vector<gk::FloatBox>, 9>;
+		BLOCK_ATTR(SubBoxType, subBoxesType);
 		BLOCK_ATTR(std::vector<gk::FloatBox>, subBoxes);
 		BLOCK_ATTR(ConnectedSubBoxes, connectedSubBoxes);
 

@@ -500,11 +500,14 @@ mod:block {
 
 	inventory_image = "../blocks/torch_on.png",
 
-	draw_type = "boundingbox",
+	draw_type = "subboxes",
 
-	bounding_box = {7 / 16, 7 / 16, 0, 2 / 16, 2 / 16, 10 / 16},
+	hardness = 0,
 
-	hardness = 0
+	subboxes = {
+		type = "fixed",
+		fixed = {7 / 16, 7 / 16, 0, 2 / 16, 2 / 16, 10 / 16},
+	},
 }
 
 mod:block {

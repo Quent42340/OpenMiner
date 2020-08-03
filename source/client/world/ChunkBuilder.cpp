@@ -70,30 +70,54 @@ std::array<std::size_t, ChunkBuilder::layers> ChunkBuilder::buildChunk(const Cli
 					addCross(x, y, z, chunk, blockState);
 				}
 				else if (blockState.drawType() == BlockDrawType::SubBoxes) {
-					for (auto &it : blockState.subBoxes()) {
-						addBlock(x, y, z, chunk, blockState, orientation, orientMatrix, it);
+					if (blockState.subBoxesType() != BlockState::WallMounted) {
+						for (auto &it : blockState.subBoxes()) {
+							addBlock(x, y, z, chunk, blockState, orientation, orientMatrix, it);
+						}
+
+						if (blockState.subBoxesType() == BlockState::Connected) {
+							u16 neighbours[6 + 1] = {
+								chunk.getBlock(x - 1, y,     z),
+								chunk.getBlock(x + 1, y,     z),
+								chunk.getBlock(x,     y - 1, z),
+								chunk.getBlock(x,     y + 1, z),
+								chunk.getBlock(x,     y,     z - 1),
+								chunk.getBlock(x,     y,     z + 1),
+
+								chunk.getBlock(x, y, z),
+							};
+
+							for (int i = 0 ; i < 6 ; ++i) {
+								auto &boxes = blockState.connectedSubBoxes()[i];
+								if (neighbours[i] == neighbours[6] && boxes.size()) {
+									for (auto &it : boxes) {
+										addBlock(x, y, z, chunk, blockState, orientation, orientMatrix, it);
+									}
+								}
+							}
+						}
 					}
 
-					if (blockState.subBoxesType() == "connected") {
-						u16 neighbours[6 + 1] = {
+					if (blockState.subBoxesType() == BlockState::WallMounted) {
+						u16 sideBlocks[4] = {
 							chunk.getBlock(x - 1, y,     z),
 							chunk.getBlock(x + 1, y,     z),
 							chunk.getBlock(x,     y - 1, z),
 							chunk.getBlock(x,     y + 1, z),
-							chunk.getBlock(x,     y,     z - 1),
-							chunk.getBlock(x,     y,     z + 1),
-
-							chunk.getBlock(x, y, z),
 						};
 
-						for (int i = 0 ; i < 6 ; ++i) {
-							auto &boxes = blockState.connectedSubBoxes()[i];
-							if (neighbours[i] == neighbours[6] && boxes.size()) {
-								for (auto &it : boxes) {
-									addBlock(x, y, z, chunk, blockState, orientation, orientMatrix, it);
-								}
-							}
-						}
+						u16 topBlocks[2] = {
+							chunk.getBlock(x,     y,     z - 1),
+							chunk.getBlock(x,     y,     z + 1),
+						};
+
+						// TODO: Find `i` from how the block was placed
+						// auto &boxes = blockState.connectedSubBoxes()[6 + i];
+						// if (neighbours[i] == neighbours[6] && boxes.size()) {
+						// 	for (auto &it : boxes) {
+						// 		addBlock(x, y, z, chunk, blockState, orientation, orientMatrix, it);
+						// 	}
+						// }
 					}
 				}
 			}
