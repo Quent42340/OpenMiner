@@ -144,7 +144,14 @@ inline void LuaBlockLoader::loadSubBoxes(BlockState &state, const sol::table &ta
 		sol::table subBoxesTable = subBoxes.value();
 		std::string type = subBoxesTable["type"].get<std::string>();
 
-		state.subBoxesType(typeMap.at(type));
+		auto it = typeMap.find(type);
+		if (it != typeMap.end()) {
+			state.subBoxesType(it->second);
+		}
+		else {
+			gkError() << ("For block '" + state.block().stringID() + "': subboxes type '" + type + "' doesn't exist").c_str();
+			return;
+		}
 
 		if (state.subBoxesType() == BlockState::Fixed || state.subBoxesType() == BlockState::Connected) {
 			sol::table fixedTable = subBoxesTable["fixed"];
@@ -158,6 +165,17 @@ inline void LuaBlockLoader::loadSubBoxes(BlockState &state, const sol::table &ta
 						it.second.as<sol::table>().get<float>(5),
 						it.second.as<sol::table>().get<float>(6),
 					});
+				}
+				else if (it.second.get_type() == sol::type::number) {
+					state.addSubBox(gk::FloatBox{
+						fixedTable.get<float>(1),
+						fixedTable.get<float>(2),
+						fixedTable.get<float>(3),
+						fixedTable.get<float>(4),
+						fixedTable.get<float>(5),
+						fixedTable.get<float>(6),
+					});
+					break;
 				}
 			}
 		}
@@ -186,6 +204,17 @@ inline void LuaBlockLoader::loadSubBoxes(BlockState &state, const sol::table &ta
 								it.second.as<sol::table>().get<float>(6),
 							});
 						}
+						else if (it.second.get_type() == sol::type::number) {
+							state.addConnectedSubBox((BlockFace)i, gk::FloatBox{
+								connectObject.value().get<float>(1),
+								connectObject.value().get<float>(2),
+								connectObject.value().get<float>(3),
+								connectObject.value().get<float>(4),
+								connectObject.value().get<float>(5),
+								connectObject.value().get<float>(6),
+							});
+							break;
+						}
 					}
 				}
 			}
@@ -199,9 +228,9 @@ inline void LuaBlockLoader::loadSubBoxes(BlockState &state, const sol::table &ta
 			};
 
 			for (int i = 0 ; i < 3 ; ++i) {
-				sol::optional<sol::table> connectObject = subBoxesTable[names[i]];
-				if (connectObject != sol::nullopt) {
-					for (auto &it : connectObject.value()) {
+				sol::optional<sol::table> wallObject = subBoxesTable[names[i]];
+				if (wallObject != sol::nullopt) {
+					for (auto &it : wallObject.value()) {
 						if (it.second.get_type() == sol::type::table) {
 							state.addWallMountedBox((BlockState::WallMountedBoxType)i, gk::FloatBox{
 								it.second.as<sol::table>().get<float>(1),
@@ -211,6 +240,17 @@ inline void LuaBlockLoader::loadSubBoxes(BlockState &state, const sol::table &ta
 								it.second.as<sol::table>().get<float>(5),
 								it.second.as<sol::table>().get<float>(6),
 							});
+						}
+						else if (it.second.get_type() == sol::type::number) {
+							state.addWallMountedBox((BlockState::WallMountedBoxType)i, gk::FloatBox{
+								wallObject.value().get<float>(1),
+								wallObject.value().get<float>(2),
+								wallObject.value().get<float>(3),
+								wallObject.value().get<float>(4),
+								wallObject.value().get<float>(5),
+								wallObject.value().get<float>(6),
+							});
+							break;
 						}
 					}
 				}
@@ -245,7 +285,6 @@ inline void LuaBlockLoader::loadDrawType(BlockState &state, const sol::table &ta
 				{"glass",       BlockDrawType::Glass},
 				{"cactus",      BlockDrawType::Cactus},
 				{"subboxes",    BlockDrawType::SubBoxes},
-				{"boundingbox", BlockDrawType::BoundingBox}, // FIXME: Temporary
 			};
 
 			auto it = drawTypes.find(drawTypeObject.as<std::string>());

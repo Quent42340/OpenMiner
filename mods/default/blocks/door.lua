@@ -55,8 +55,12 @@ mod:block {
 	is_rotatable = true,
 	is_opaque = false,
 
-	draw_type = "boundingbox",
-	bounding_box = {13 / 16, 0, 0, 3 / 16, 1, 1},
+	draw_type = "subboxes",
+
+	subboxes = {
+		type = "fixed",
+		fixed = {13 / 16, 0, 0, 3 / 16, 1, 1},
+	},
 
 	on_block_placed = function(pos, world)
 		world:add_block_data(pos.x, pos.y, pos.z, 0, 0)
@@ -87,8 +91,12 @@ mod:block {
 	is_rotatable = true,
 	is_opaque = false,
 
-	draw_type = "boundingbox",
-	bounding_box = {13 / 16, 0, 0, 3 / 16, 1, 1},
+	draw_type = "subboxes",
+
+	subboxes = {
+		type = "fixed",
+		fixed = {13 / 16, 0, 0, 3 / 16, 1, 1},
+	},
 
 	on_block_placed = function(pos, world)
 		world:add_block_data(pos.x, pos.y, pos.z, 0, 0)

@@ -218,10 +218,16 @@ mod:block {
 		om_material_wood = 1,
 	},
 
-	draw_type = "boundingbox",
 	is_opaque = false,
 
-	bounding_box = {0, 0, 0, 1, 1, 0.5}
+	bounding_box = {0, 0, 0, 1, 1, 0.5},
+
+	draw_type = "subboxes",
+
+	subboxes = {
+		type = "fixed",
+		fixed = {0, 0, 0, 1, 1, 0.5},
+	},
 }
 
 mod:block {
@@ -371,8 +377,12 @@ mod:block {
 		{ alt_tiles = {"farmland_wet.png", "dirt.png", "dirt.png"} },
 	},
 
-	draw_type = "boundingbox",
-	bounding_box = {0, 0, 0, 1, 1, 15 / 16},
+	draw_type = "subboxes",
+
+	subboxes = {
+		type = "fixed",
+		fixed = {0, 0, 0, 1, 1, 15 / 16},
+	},
 }
 
 mod:block {
@@ -384,8 +394,12 @@ mod:block {
 		om_material_dirt = 1,
 	},
 
-	draw_type = "boundingbox",
-	bounding_box = {0, 0, 0, 1, 1, 15 / 16},
+	draw_type = "subboxes",
+
+	subboxes = {
+		type = "fixed",
+		fixed = {0, 0, 0, 1, 1, 15 / 16},
+	},
 }
 
 mod:block {
@@ -500,14 +514,16 @@ mod:block {
 
 	inventory_image = "../blocks/torch_on.png",
 
-	draw_type = "subboxes",
+	bounding_box = {7 / 16, 7 / 16, 0, 2 / 16, 2 / 16, 10 / 16},
 
-	hardness = 0,
+	draw_type = "subboxes",
 
 	subboxes = {
 		type = "fixed",
 		fixed = {7 / 16, 7 / 16, 0, 2 / 16, 2 / 16, 10 / 16},
 	},
+
+	hardness = 0
 }
 
 mod:block {
@@ -830,9 +846,7 @@ mod:block {
 	subboxes = {
 		type = "connected",
 
-		fixed = {
-			{6 / 16, 6 / 16, 0, 4 / 16, 4 / 16, 1},
-		},
+		fixed = {6 / 16, 6 / 16, 0, 4 / 16, 4 / 16, 1},
 
 		connect_west = {
 			{0,       7 / 16,  6 / 16, 6 / 16, 2 / 16, 3 / 16},

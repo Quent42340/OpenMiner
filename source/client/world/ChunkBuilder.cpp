@@ -60,11 +60,9 @@ std::array<std::size_t, ChunkBuilder::layers> ChunkBuilder::buildChunk(const Cli
 				 || blockState.drawType() == BlockDrawType::Leaves
 				 || blockState.drawType() == BlockDrawType::Liquid
 				 || blockState.drawType() == BlockDrawType::Glass
-				 || blockState.drawType() == BlockDrawType::Cactus
-				 || blockState.drawType() == BlockDrawType::BoundingBox)
+				 || blockState.drawType() == BlockDrawType::Cactus)
 				{
-					const gk::FloatBox &boundingBox = blockState.boundingBox();
-					addBlock(x, y, z, chunk, blockState, orientation, orientMatrix, boundingBox);
+					addBlock(x, y, z, chunk, blockState, orientation, orientMatrix, gk::FloatBox{0, 0, 0, 1, 1, 1});
 				}
 				else if (blockState.drawType() == BlockDrawType::XShape) {
 					addCross(x, y, z, chunk, blockState);
@@ -285,7 +283,7 @@ inline void ChunkBuilder::addBlockFace(s8f x, s8f y, s8f z, s8f f, const ClientC
 		vertices[v].texCoord[1] = gk::qlerp(blockTexCoords.y, blockTexCoords.y + blockTexCoords.sizeY, V);
 
 		bool useFancyAO = (Config::ambientOcclusion == 2
-			&& blockState.drawType() != BlockDrawType::BoundingBox);
+			&& blockState.drawType() != BlockDrawType::SubBoxes);
 
 		if (Config::isSmoothLightingEnabled)
 			vertices[v].lightValue[0] = getLightForVertex(Light::Sun, x, y, z, *neighbourOfs[v], normal, chunk, useFancyAO);

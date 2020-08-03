@@ -27,6 +27,7 @@
 #include "BlockState.hpp"
 #include "Registry.hpp"
 
+#include <gk/core/Debug.hpp>
 void BlockState::serialize(sf::Packet &packet) const {
 	packet << m_id << m_label << m_tiles
 		<< m_itemDrop << m_itemDropAmount
@@ -52,7 +53,7 @@ void BlockState::deserialize(sf::Packet &packet) {
 		>> subBoxesType >> m_subBoxes >> m_connectedSubBoxes;
 
 	m_drawType = BlockDrawType(drawType);
-	m_subBoxesType = SubBoxType(drawType);
+	m_subBoxesType = SubBoxType(subBoxesType);
 }
 
 bool BlockState::isOpaque() const {

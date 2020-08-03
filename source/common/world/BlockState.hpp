@@ -46,7 +46,6 @@ enum class BlockDrawType : u8 {
 	Glass       = 4,
 	Cactus      = 5,
 	SubBoxes    = 6,
-	BoundingBox = 7, // FIXME: Temporary
 };
 
 #define BLOCK_ATTR_GETTER(attrName) \
@@ -106,15 +105,15 @@ class BlockState : public gk::ISerializable {
 		void setDefaultState(const BlockState *defaultState) { m_defaultState = defaultState; }
 
 		enum SubBoxType {
-			Fixed,
-			Connected,
-			WallMounted
+			Fixed       = 0,
+			Connected   = 1,
+			WallMounted = 2,
 		};
 
 		enum WallMountedBoxType {
-			WallTop,
-			WallBottom,
-			WallSides,
+			WallTop    = 0,
+			WallBottom = 1,
+			WallSides  = 2,
 		};
 
 		void addSubBox(const gk::FloatBox &subBox) { m_subBoxes.emplace_back(subBox); }
