@@ -401,6 +401,11 @@ inline void LuaBlockLoader::loadParams(ServerBlock &block) const {
 	if (block.isRotatable())
 		block.param().allocateBits(BlockParam::Type::Rotation, 5);
 
+	for (auto &it : block.states()) {
+		if (it.drawType() == BlockDrawType::SubBoxes && it.subBoxesType() == BlockState::WallMounted)
+			block.param().allocateBits(BlockParam::Type::WallMounted, 2);
+	}
+
 	if (block.states().size() > 1) {
 		int bits = 1;
 		int index = block.states().size();

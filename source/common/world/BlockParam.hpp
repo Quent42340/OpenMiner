@@ -46,22 +46,23 @@ class BlockParam : public gk::ISerializable {
 		void serialize(sf::Packet &packet) const override;
 		void deserialize(sf::Packet &packet) override;
 
-		enum Type {
-			Rotation,
-			State,
-			Custom,
+		enum Type : u8 {
+			Rotation    = 0,
+			State       = 1,
+			WallMounted = 2,
+			Custom      = 3,
 
 			Count
 		};
 
-		void allocateBits(u8 type, u8 size);
+		void allocateBits(Type type, u8 size);
 		u8 getAllocatedSize() const { return m_totalSize; }
 
-		u16 getParam(u8 type, u16 data) const;
-		u16 setParam(u8 type, u16 data, u16 param) const;
-		bool hasParam(u8 type) const { return m_allocatedBits.find(type) != m_allocatedBits.end(); }
+		u16 getParam(Type type, u16 data) const;
+		u16 setParam(Type type, u16 data, u16 param) const;
+		bool hasParam(Type type) const { return m_allocatedBits.find(type) != m_allocatedBits.end(); }
 
-		static std::string getTypeName(u8 type);
+		static std::string getTypeName(Type type);
 
 		static void initUsertype(sol::state &lua);
 

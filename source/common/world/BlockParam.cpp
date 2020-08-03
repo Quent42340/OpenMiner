@@ -39,7 +39,7 @@ void BlockParam::deserialize(sf::Packet &packet) {
 	packet >> m_totalSize >> m_allocatedBits;
 }
 
-void BlockParam::allocateBits(u8 type, u8 size) {
+void BlockParam::allocateBits(Type type, u8 size) {
 	auto it = m_allocatedBits.find(type);
 	if (it != m_allocatedBits.end()) {
 		gkError() << "Can't allocate param type" << getTypeName(type) << "twice in block" << m_block->stringID();
@@ -55,12 +55,12 @@ void BlockParam::allocateBits(u8 type, u8 size) {
 		gkError() << "Failed to allocate bits for param" << getTypeName(type) << "in block" << m_block->stringID();
 		gkError() << "Reason: Can't allocate more than 16 bits. Allocated bits:";
 		for (auto &it : m_allocatedBits) {
-			gkError() << "\t-" << getTypeName(it.first) << "=" << (int)it.second.size;
+			gkError() << "\t-" << getTypeName((Type)it.first) << "=" << (int)it.second.size;
 		}
 	}
 }
 
-u16 BlockParam::getParam(u8 type, u16 data) const {
+u16 BlockParam::getParam(Type type, u16 data) const {
 	auto it = m_allocatedBits.find(type);
 	if (it == m_allocatedBits.end()) {
 		gkError() << "Failed to get param" << getTypeName(type) << "in block" << m_block->stringID();
@@ -71,7 +71,7 @@ u16 BlockParam::getParam(u8 type, u16 data) const {
 	return (data >> it->second.offset) & ~(~0u << it->second.size);
 }
 
-u16 BlockParam::setParam(u8 type, u16 data, u16 param) const {
+u16 BlockParam::setParam(Type type, u16 data, u16 param) const {
 	auto it = m_allocatedBits.find(type);
 	if (it == m_allocatedBits.end()) {
 		gkError() << "Failed to set param" << getTypeName(type) << "in block" << m_block->stringID();
@@ -87,10 +87,12 @@ u16 BlockParam::setParam(u8 type, u16 data, u16 param) const {
 	return (data & ~mask) | (param & mask);
 }
 
-std::string BlockParam::getTypeName(u8 type) {
-	std::array<std::string, Type::Count> names = {
+std::string BlockParam::getTypeName(Type type) {
+	static std::array<std::string, Type::Count> names = {
 		"Rotation",
 		"State",
+		"WallMounted",
+		"Custom",
 	};
 
 	return names[type];
@@ -105,8 +107,10 @@ void BlockParam::initUsertype(sol::state &lua) {
 	);
 
 	lua["BlockParamType"] = lua.create_table_with(
-		"Rotation", Type::Rotation,
-		"State", Type::State,
+		"Rotation",    Type::Rotation,
+		"State",       Type::State,
+		"WallMounted", Type::WallMounted,
+		"Custom",      Type::Custom,
 
 		"Count", Type::Count
 	);

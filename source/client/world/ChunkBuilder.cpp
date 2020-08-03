@@ -87,7 +87,7 @@ std::array<std::size_t, ChunkBuilder::layers> ChunkBuilder::buildChunk(const Cli
 
 							for (int i = 0 ; i < 6 ; ++i) {
 								auto &boxes = blockState.connectedSubBoxes()[i];
-								if (neighbours[i] == neighbours[6] && boxes.size()) {
+								if (neighbours[i] == neighbours[6]) {
 									for (auto &it : boxes) {
 										addBlock(x, y, z, chunk, blockState, orientation, orientMatrix, it);
 									}
@@ -97,25 +97,29 @@ std::array<std::size_t, ChunkBuilder::layers> ChunkBuilder::buildChunk(const Cli
 					}
 
 					if (blockState.subBoxesType() == BlockState::WallMounted) {
-						u16 sideBlocks[4] = {
-							chunk.getBlock(x - 1, y,     z),
-							chunk.getBlock(x + 1, y,     z),
-							chunk.getBlock(x,     y - 1, z),
-							chunk.getBlock(x,     y + 1, z),
-						};
+						if (block.param().hasParam(BlockParam::WallMounted)) {
+							u8 wall = block.param().getParam(BlockParam::WallMounted, blockParam);
+							auto &boxes = blockState.wallMountedBoxes((BlockState::WallMountedBoxType)wall);
+							if (!boxes.empty())
+								for (auto &it : boxes)
+									addBlock(x, y, z, chunk, blockState, orientation, orientMatrix, it);
+							else {
+								gkError() << "Failed to build mesh for block" << block.stringID() << "at" << (int)x << (int)y << (int)z;
 
-						u16 topBlocks[2] = {
-							chunk.getBlock(x,     y,     z - 1),
-							chunk.getBlock(x,     y,     z + 1),
-						};
+								static const std::string wallMountedBoxType[4] = {
+									"wall_top",
+									"wall_bottom",
+									"wall_side",
+									"invalid"
+								};
 
-						// TODO: Find `i` from how the block was placed
-						// auto &boxes = blockState.connectedSubBoxes()[6 + i];
-						// if (neighbours[i] == neighbours[6] && boxes.size()) {
-						// 	for (auto &it : boxes) {
-						// 		addBlock(x, y, z, chunk, blockState, orientation, orientMatrix, it);
-						// 	}
-						// }
+								gkError() << ("Reason: Wall '" + wallMountedBoxType[wall] + "' not defined").c_str();
+							}
+						}
+						else {
+							gkError() << "Failed to build mesh for block" << block.stringID() << "at" << (int)x << (int)y << (int)z;
+							gkError() << "Reason: Uses wallmounted subboxes without allocating block param accordingly";
+						}
 					}
 				}
 			}
