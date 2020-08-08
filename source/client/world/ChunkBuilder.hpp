@@ -46,17 +46,20 @@ class ChunkBuilder {
 	public:
 		ChunkBuilder(TextureAtlas &textureAtlas) : m_textureAtlas(textureAtlas) {}
 
-		static constexpr u8 layers = 5;
-
-		std::array<std::size_t, layers> buildChunk(const ClientChunk &chunk, const std::array<gk::VertexBuffer, layers> &vbo);
-
 		enum Layer {
 			Solid,
 			NoMipMap,
 			Flora,
 			Glass,
 			Liquid,
+
+			Count
 		};
+
+		using VertexCountArray = std::array<std::size_t, Layer::Count>;
+		using VertexBufferArray = std::array<gk::VertexBuffer, Layer::Count>;
+
+		VertexCountArray buildChunk(const ClientChunk &chunk, const VertexBufferArray &vbo);
 
 	private:
 		void addBlock(s8f x, s8f y, s8f z, const ClientChunk &chunk, const BlockState &blockState,
@@ -78,7 +81,7 @@ class ChunkBuilder {
 		u8 getLightForVertex(Light light, s8f x, s8f y, s8f z, const gk::Vector3i &offset,
 		                     const gk::Vector3i &normal, const ClientChunk &chunk, bool useAO);
 
-		std::array<std::vector<Vertex>, layers> m_vertices;
+		std::array<std::vector<Vertex>, Layer::Count> m_vertices;
 
 		TextureAtlas &m_textureAtlas;
 };

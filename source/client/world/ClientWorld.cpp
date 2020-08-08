@@ -325,7 +325,7 @@ void ClientWorld::draw(gk::RenderTarget &target, gk::RenderStates states) const 
 		chunks.emplace_back(it.second.get(), tf);
 	}
 
-	for (u8 i = 0 ; i < ChunkBuilder::layers ; ++i) {
+	for (u8 i = 0 ; i < ChunkBuilder::Layer::Count ; ++i) {
 		for (auto &it : chunks) {
 			states.transform = it.second;
 			it.first->drawLayer(target, states, i);

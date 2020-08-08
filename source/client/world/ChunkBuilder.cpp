@@ -34,10 +34,8 @@
 
 using namespace BlockGeometry;
 
-std::array<std::size_t, ChunkBuilder::layers> ChunkBuilder::buildChunk(const ClientChunk &chunk,
-                                                                       const std::array<gk::VertexBuffer, layers> &vbo)
-{
-	for (s8f i = 0 ; i < layers ; ++i)
+ChunkBuilder::VertexCountArray ChunkBuilder::buildChunk(const ClientChunk &chunk, const VertexBufferArray &vbo) {
+	for (s8f i = 0 ; i < Layer::Count ; ++i)
 		m_vertices[i].reserve(CHUNK_WIDTH * CHUNK_DEPTH * CHUNK_HEIGHT * nFaces * nVertsPerFace);
 
 	for (s8f z = 0 ; z < CHUNK_HEIGHT ; z++) {
@@ -126,8 +124,8 @@ std::array<std::size_t, ChunkBuilder::layers> ChunkBuilder::buildChunk(const Cli
 		}
 	}
 
-	std::array<std::size_t, layers> verticesCount;
-	for (u8 i = 0 ; i < layers ; ++i) {
+	std::array<std::size_t, Layer::Count> verticesCount;
+	for (u8 i = 0 ; i < Layer::Count ; ++i) {
 		m_vertices[i].shrink_to_fit();
 
 		gk::VertexBuffer::bind(&vbo[i]);
